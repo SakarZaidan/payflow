@@ -15,11 +15,14 @@ run() {
         expected=$((completed - (completed + 4) / 5 + 1))
     fi
     docker compose exec -T web php ops/verify-db.php "$start" "$expected" \
-        | tee "artifacts/benchmark/$mode-db.json"
+        | tee "artifacts/benchmark/$mode-db.json" || return 1
     # Keep the next run outside this run's last timestamp bucket.
     sleep 2
     return "$status"
 }
 
-run burst
-run mixed
+burst_status=0
+mixed_status=0
+run burst || burst_status=$?
+run mixed || mixed_status=$?
+(( burst_status == 0 && mixed_status == 0 ))

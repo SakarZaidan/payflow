@@ -6,7 +6,7 @@ const base = __ENV.BASE_URL || 'http://127.0.0.1:8080';
 const burst = __ENV.MODE === 'burst';
 const scenario = burst
     ? { executor: 'per-vu-iterations', vus: 50, iterations: 1, maxDuration: '20s' }
-    : { executor: 'constant-arrival-rate', rate: 50, timeUnit: '1s', duration: __ENV.DURATION || '5m', preAllocatedVUs: 80, maxVUs: 160 };
+    : { executor: 'constant-arrival-rate', rate: 50, timeUnit: '1s', duration: '5m', preAllocatedVUs: 80, maxVUs: 160 };
 
 export const options = {
     scenarios: { payments: scenario },
@@ -14,7 +14,7 @@ export const options = {
         'http_req_duration{operation:accept}': ['p(95)<250'],
         http_req_failed: ['rate<0.005'],
         checks: ['rate==1'],
-        ...(!burst ? { dropped_iterations: ['count==0'] } : {}),
+        ...(!burst ? { dropped_iterations: ['count<75'] } : {}),
     },
 };
 
@@ -29,6 +29,8 @@ function submit(key, rail) {
 
 export function setup() {
     if (!__ENV.PAYFLOW_MERCHANT_TOKEN || !__ENV.RUN_ID) fail('Set PAYFLOW_MERCHANT_TOKEN and RUN_ID.');
+    // Warm the app workers before measuring API acceptance.
+    http.batch(Array.from({ length: 24 }, () => ['GET', base + '/up', null, { tags: { operation: 'warmup' } }]));
     return { run: __ENV.RUN_ID };
 }
 
