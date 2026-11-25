@@ -14,7 +14,7 @@ final class DatabaseSeeder extends Seeder
 {
     public function run(Payments $payments, Simulator $simulator, Reconciliation $reconciliation): void
     {
-        if (DB::table('payment_operations')->exists() || config('payflow.gateway') !== 'simulator') {
+        if (DB::table('payment_operations')->where('idempotency_hash', hash('sha256', 'demo-0'))->exists() || config('payflow.gateway') !== 'simulator') {
             return;
         }
 

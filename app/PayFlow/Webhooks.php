@@ -54,7 +54,8 @@ final class Webhooks
     public function process(): void
     {
         $inbox = DB::table('webhook_inbox')->whereNull('processed_at');
-        foreach ((clone $inbox)->orderBy('id')->limit(100)->get() as $event) {
+        $due = (clone $inbox)->where(fn ($query) => $query->whereNull('retry_at')->orWhere('retry_at', '<=', now()));
+        foreach ($due->orderBy('id')->limit(100)->get() as $event) {
             try {
                 $result = $event->observation
                     ? json_decode($event->observation, true, flags: JSON_THROW_ON_ERROR)
@@ -69,6 +70,10 @@ final class Webhooks
                 }
                 (clone $inbox)->where('id', $event->id)->update(['processed_at' => now()]);
             } catch (Throwable $error) {
+                (clone $inbox)->where('id', $event->id)->update([
+                    'attempts' => min(65535, $event->attempts + 1),
+                    'retry_at' => now()->addSeconds(min(3600, 5 ** min(6, $event->attempts + 1))),
+                ]);
                 Log::warning('Webhook processing deferred', ['event_id' => $event->id, 'error_type' => $error::class]);
             }
         }

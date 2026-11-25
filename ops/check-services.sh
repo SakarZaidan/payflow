@@ -2,7 +2,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-export PAYFLOW_QA_URL="${PAYFLOW_QA_URL:-http://127.0.0.1:8080}"
 docker compose exec -T web php artisan test
 docker compose exec -T web php <<'PHP'
 <?php
