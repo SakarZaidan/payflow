@@ -1,7 +1,8 @@
 <?php
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-if (is_string($path) && $path !== '/' && is_file(__DIR__.$path)) {
+if (is_string($path) && preg_match('#^/(?:console\.css|brand/[a-z-]+\.png|fonts/[a-z-]+\.ttf|robots\.txt)$#D', $path)
+    && is_file(__DIR__.$path)) {
     return false;
 }
 

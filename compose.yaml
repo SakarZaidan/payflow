@@ -93,6 +93,7 @@ services:
     env_file: .env
     environment:
       BASE_URL: http://web:8080
+      K6_NO_USAGE_REPORT: "true"
     volumes:
       - ./tests/load:/scripts:ro
 volumes:
