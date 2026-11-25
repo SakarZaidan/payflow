@@ -2,15 +2,19 @@ import json
 import subprocess
 
 base = ["docker", "compose"]
-payment_id = subprocess.check_output(
+fixture = json.loads(subprocess.check_output(
     base + ["exec", "-T", "web", "php", "-r",
             r"""require 'vendor/autoload.php'; $app = require 'bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-echo Illuminate\Support\Facades\DB::table('payment_operations')->where('state', 'declined')->where('amount', 48000)->value('id');"""],
+$db = $app->make('db');
+echo json_encode([
+    'payment_id' => $db->table('payment_operations')->where('state', 'declined')->where('amount', 48000)->value('id'),
+    'run_id' => $db->table('reconciliation_items')->where('result', 'amount_mismatch')->orderByDesc('id')->value('run_id'),
+]);"""],
     text=True,
-).strip()
-if not payment_id:
-    raise SystemExit("Could not find the seeded incident payment.")
+))
+if not fixture["payment_id"] or not fixture["run_id"]:
+    raise SystemExit("Could not find the seeded incident and its reconciliation run.")
 
 messages = [
     {"id": 1, "method": "initialize", "params": {
@@ -18,9 +22,9 @@ messages = [
     }},
     {"method": "notifications/initialized"},
     {"id": 2, "method": "tools/list"},
-    {"id": 3, "method": "tools/call", "params": {"name": "get_transaction", "arguments": {"payment_id": payment_id}}},
-    {"id": 4, "method": "tools/call", "params": {"name": "list_refunds", "arguments": {"payment_id": payment_id}}},
-    {"id": 5, "method": "tools/call", "params": {"name": "get_reconciliation_run", "arguments": {"run_id": 1}}},
+    {"id": 3, "method": "tools/call", "params": {"name": "get_transaction", "arguments": {"payment_id": fixture["payment_id"]}}},
+    {"id": 4, "method": "tools/call", "params": {"name": "list_refunds", "arguments": {"payment_id": fixture["payment_id"]}}},
+    {"id": 5, "method": "tools/call", "params": {"name": "get_reconciliation_run", "arguments": {"run_id": fixture["run_id"]}}},
 ]
 output = subprocess.run(
     base + ["run", "--rm", "-T", "mcp"], check=True, capture_output=True, text=True,

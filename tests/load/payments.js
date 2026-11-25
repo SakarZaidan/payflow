@@ -6,7 +6,7 @@ const base = __ENV.BASE_URL || 'http://127.0.0.1:8080';
 const burst = __ENV.MODE === 'burst';
 const scenario = burst
     ? { executor: 'per-vu-iterations', vus: 50, iterations: 1, maxDuration: '20s' }
-    : { executor: 'constant-arrival-rate', rate: 50, timeUnit: '1s', duration: __ENV.DURATION || '5m', preAllocatedVUs: 150, maxVUs: 180 };
+    : { executor: 'constant-arrival-rate', rate: 50, timeUnit: '1s', duration: __ENV.DURATION || '5m', preAllocatedVUs: 80, maxVUs: 160 };
 
 export const options = {
     scenarios: { payments: scenario },

@@ -10,5 +10,5 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --prefer-dist --no-interaction -
 COPY . .
 COPY ops/php.ini /usr/local/etc/php/conf.d/payflow.ini
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize \
-    && mkdir -p storage/app/private && chown -R www-data:www-data storage bootstrap/cache
+    && touch .env && mkdir -p storage/app/private && chown -R www-data:www-data storage bootstrap/cache
 USER www-data
