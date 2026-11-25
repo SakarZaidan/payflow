@@ -1,0 +1,123 @@
+openapi: 3.1.0
+info:
+  title: PayFlow Merchant API
+  version: 1.0.0
+  description: Local payment and refund operations. Monetary amounts use integer KWD fils.
+servers:
+  - url: http://127.0.0.1:8080/api/v1
+security:
+  - merchantToken: []
+paths:
+  /payments:
+    post:
+      summary: Create a payment
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rail, amount]
+              properties:
+                rail: {type: string, enum: [knet, card]}
+                amount: {$ref: '#/components/schemas/Amount'}
+                scenario: {type: string, enum: [decline], description: Available with the local simulator.}
+      responses:
+        '202': {$ref: '#/components/responses/Accepted'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Invalid'}
+  /payments/{id}:
+    get:
+      summary: Read payment status
+      parameters:
+        - $ref: '#/components/parameters/OperationId'
+      responses:
+        '200': {$ref: '#/components/responses/Status'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /payments/{id}/refunds:
+    post:
+      summary: Request a full or partial refund
+      parameters:
+        - $ref: '#/components/parameters/OperationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount: {$ref: '#/components/schemas/Amount'}
+      responses:
+        '202': {$ref: '#/components/responses/Accepted'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Invalid'}
+  /refunds/{id}:
+    get:
+      summary: Read refund status
+      parameters:
+        - $ref: '#/components/parameters/OperationId'
+      responses:
+        '200': {$ref: '#/components/responses/Status'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+components:
+  securitySchemes:
+    merchantToken: {type: http, scheme: bearer}
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Reuse for retries of the same payload. Scoped to payments or to refunds for one payment.
+      schema: {type: string, minLength: 1, maxLength: 128, pattern: '^[!-~]+$'}
+    OperationId:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+  schemas:
+    Amount: {type: integer, minimum: 1, maximum: 100000000}
+    Status:
+      type: object
+      required: [id, payment_id, kind, rail, state, amount, currency, checkout_url, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        payment_id: {type: [string, 'null'], format: uuid}
+        kind: {type: string, enum: [payment, refund]}
+        rail: {type: string, enum: [knet, card]}
+        state: {type: string, enum: [queued, pending, captured, refunded, declined, needs_review]}
+        amount: {$ref: '#/components/schemas/Amount'}
+        currency: {type: string, const: KWD}
+        checkout_url: {type: [string, 'null'], format: uri}
+        created_at: {type: string, description: UTC database timestamp}
+        updated_at: {type: string, description: UTC database timestamp}
+  responses:
+    Accepted:
+      description: Operation queued. A retry with the same key and normalized payload returns the same operation.
+      headers:
+        Location: {schema: {type: string}}
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [id, status_url]
+            properties:
+              id: {type: string, format: uuid}
+              status_url: {type: string}
+    Status:
+      description: Current payment or refund state
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Status'}
+    Unauthorized: {description: Merchant token missing or invalid}
+    NotFound: {description: Operation not found}
+    Conflict: {description: Idempotency conflict or refund exceeds the available captured balance}
+    Invalid: {description: Invalid request or missing idempotency key}

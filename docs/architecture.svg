@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 559" role="img" aria-labelledby="title">
+<title id="title">PayFlow system architecture</title>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#52665c"/></marker></defs>
+<rect width="1250" height="559" fill="#f6f4ee"/>
+<text x="30" y="53" font-family="system-ui,sans-serif" fill="#172e27" font-size="32">PayFlow system architecture</text>
+<text x="30" y="80" font-family="system-ui,sans-serif" fill="#46594f" font-size="16">Local application services, payment flows and read-only operations</text>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="232,183 317,183"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="232,333 317,333"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="232,483 317,483"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="542,333 644,333"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="542,178 607,178 607,300 644,300"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="542,482 607,482 607,382 644,382"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="883,175 987,175"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="1044,231 1044,286"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="987,209 929,209 929,313 883,313"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="1148,231 1148,286"/>
+<polyline fill="none" stroke="#52665c" stroke-width="2" marker-end="url(#arrow)" points="987,477 929,477 929,374 883,374"/>
+<rect x="30" y="137" width="202" height="91" rx="10" fill="#fffefa" stroke="#879a8d"/>
+<text x="44" y="171" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">Merchant API client</text>
+<text x="44" y="197" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Create · refund · poll</text>
+<rect x="30" y="287" width="202" height="91" rx="10" fill="#fffefa" stroke="#879a8d"/>
+<text x="44" y="321" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">Operator</text>
+<text x="44" y="347" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Read-only console</text>
+<rect x="30" y="437" width="202" height="91" rx="10" fill="#fffefa" stroke="#879a8d"/>
+<text x="44" y="471" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">Claude client</text>
+<text x="44" y="497" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Investigate and draft</text>
+<rect x="317" y="137" width="225" height="91" rx="10" fill="#fffefa" stroke="#879a8d"/>
+<text x="331" y="171" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">Laravel API</text>
+<text x="331" y="197" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Idempotency · callback inbox</text>
+<rect x="317" y="287" width="225" height="91" rx="10" fill="#fffefa" stroke="#879a8d"/>
+<text x="331" y="321" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">Blade console</text>
+<text x="331" y="347" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Payments · settlement</text>
+<rect x="317" y="437" width="225" height="91" rx="10" fill="#fffefa" stroke="#879a8d"/>
+<text x="331" y="471" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">MCP server · stdio</text>
+<text x="331" y="497" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Bounded evidence queries</text>
+<rect x="644" y="286" width="239" height="112" rx="10" fill="#e2eee4" stroke="#879a8d"/>
+<text x="658" y="320" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">MySQL</text>
+<text x="658" y="346" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Operations · outbox · ledger</text>
+<rect x="644" y="135" width="239" height="82" rx="10" fill="#e2eee4" stroke="#879a8d"/>
+<text x="658" y="169" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">Redis queue</text>
+<text x="658" y="195" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Durable work comes from MySQL</text>
+<rect x="987" y="128" width="233" height="103" rx="10" fill="#e2eee4" stroke="#879a8d"/>
+<text x="1001" y="162" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">Worker + scheduler</text>
+<text x="1001" y="188" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Relay · poll · reconcile</text>
+<rect x="987" y="286" width="233" height="112" rx="10" fill="#fffefa" stroke="#879a8d"/>
+<text x="1001" y="320" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">Payment gateway</text>
+<text x="1001" y="346" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Local simulator or Tap sandbox</text>
+<rect x="987" y="437" width="233" height="91" rx="10" fill="#fffefa" stroke="#879a8d"/>
+<text x="1001" y="471" font-family="system-ui,sans-serif" fill="#172e27" font-size="18">Report storage</text>
+<text x="1001" y="497" font-family="system-ui,sans-serif" fill="#46594f" font-size="13">Local volume or S3Mock</text>
+</svg>

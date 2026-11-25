@@ -1,0 +1,100 @@
+name: payflow
+x-app: &app
+  image: payflow-local
+  build: .
+  env_file: .env
+  environment: &app-env
+    DB_CONNECTION: mysql
+    DB_HOST: mysql
+    REDIS_HOST: redis
+    CACHE_STORE: redis
+    SESSION_DRIVER: redis
+    QUEUE_CONNECTION: redis
+    REDIS_QUEUE_RETRY_AFTER: 60
+    PAYFLOW_SIMULATOR_URL: http://simulator:8081
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  volumes:
+    - reports:/app/storage/app/private
+services:
+  web:
+    <<: *app
+    command: php -S 0.0.0.0:8080 -t public public/router.php
+    environment:
+      <<: *app-env
+      PHP_CLI_SERVER_WORKERS: 8
+    ports:
+      - 127.0.0.1:${PAYFLOW_PORT:-8080}:8080
+  worker:
+    <<: *app
+    command: php artisan queue:work redis --sleep=1 --timeout=25 --tries=1
+    deploy:
+      replicas: 4
+  relay:
+    <<: *app
+    command: php artisan payflow:relay --watch
+  scheduler:
+    <<: *app
+    command: php artisan schedule:work
+  simulator:
+    <<: *app
+    command: php -S 0.0.0.0:8081 -t public public/router.php
+    environment:
+      <<: *app-env
+      PHP_CLI_SERVER_WORKERS: 4
+      PAYFLOW_SIMULATOR_SERVICE: "true"
+  mcp:
+    profiles: [tools]
+    image: payflow-local
+    command: php artisan mcp:start payflow-operations
+    environment:
+      APP_ENV: local
+      LOG_CHANNEL: stderr
+      DB_HOST: mysql
+      DB_DATABASE: ${DB_DATABASE}
+      PAYFLOW_MCP_DB_PASSWORD: ${PAYFLOW_MCP_DB_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      PAYFLOW_MCP_DB_PASSWORD: ${PAYFLOW_MCP_DB_PASSWORD}
+    volumes:
+      - mysql:/var/lib/mysql
+      - ./ops/mysql-reader.sh:/docker-entrypoint-initdb.d/10-reader.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      interval: 2s
+      timeout: 2s
+      retries: 60
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  s3mock:
+    profiles: [s3]
+    image: adobe/s3mock:5.0.0
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: payflow-reports
+  k6:
+    profiles: [benchmark]
+    image: grafana/k6:1.6.1
+    env_file: .env
+    environment:
+      BASE_URL: http://web:8080
+    volumes:
+      - ./tests/load:/scripts:ro
+volumes:
+  mysql:
+  reports:
